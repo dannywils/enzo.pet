@@ -1,11 +1,13 @@
 import React from 'react';
 import { graphql } from 'gatsby';
+import Helmet from 'react-helmet';
 
 import './style.css';
 
 export default class extends React.Component {
   state = {
     image: 0,
+    barks: 0,
     loaded: false
   };
 
@@ -13,7 +15,7 @@ export default class extends React.Component {
     this.audio = new Audio('/bark.mp3');
 
     // preload images
-    this.props.data.allFile.edges.forEach((edge, i) => {
+    this.getImages().forEach((edge, i) => {
       let image = new Image();
       image.src = edge.node.childImageSharp.fluid.srcWebp;
 
@@ -43,15 +45,18 @@ export default class extends React.Component {
   };
 
   bark = () => {
+    this.setState(prevState => ({ barks: prevState.barks + 1 }));
     this.audio.cloneNode().play();
   };
+
+  getImages = () => this.props.data.allFile.edges;
 
   previousImage = () => {
     this.bark();
 
     this.setState(prevState => {
       const prev = prevState.image - 1;
-      const image = prev < 0 ? this.props.data.allFile.edges.length - 1 : prev;
+      const image = prev < 0 ? this.getImages().length - 1 : prev;
       return { image };
     });
   };
@@ -61,17 +66,26 @@ export default class extends React.Component {
 
     this.setState(prevState => {
       const next = prevState.image + 1;
-      const image = next > this.props.data.allFile.edges.length - 1 ? 0 : next;
+      const image = next > this.getImages().length - 1 ? 0 : next;
       return { image };
     });
   };
 
   render() {
-    const image = this.props.data.allFile.edges[this.state.image].node
-      .childImageSharp.fluid;
+    const { loaded, barks } = this.state;
+    const image = this.getImages()[this.state.image].node.childImageSharp.fluid;
 
     return (
       <div className="wrapper" onClick={this.nextImage}>
+        {barks > 0 && (
+          <Helmet>
+            <title>
+              {Array.from({ length: (barks % 3) + 1 }, (_, i) => i)
+                .map(num => 'bark')
+                .join(' ')}
+            </title>
+          </Helmet>
+        )}
         <div
           className="background"
           style={{ backgroundImage: `url(${image.base64})` }}
@@ -79,7 +93,7 @@ export default class extends React.Component {
         <img
           src={image.srcWebp}
           alt="Enzo!"
-          style={{ opacity: this.state.loaded ? 1 : 0 }}
+          style={{ opacity: loaded ? 1 : 0 }}
         />
       </div>
     );
