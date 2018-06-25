@@ -9,7 +9,7 @@ export default class extends React.Component {
   };
 
   componentDidMount() {
-    this.audio = new Audio('/bark.wav');
+    this.audio = new Audio('/bark.mp3');
 
     // preload images
     this.props.data.allFile.edges.forEach(({ node }) => {
