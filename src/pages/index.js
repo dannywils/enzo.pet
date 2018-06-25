@@ -25,7 +25,7 @@ export default class extends React.Component {
 
   render() {
     const { edges } = this.props.data.allFile;
-    console.log(edges);
+
     return (
       <div className="wrapper" onClick={this.showNextImage}>
         <GatsbyImage
