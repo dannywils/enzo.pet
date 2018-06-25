@@ -38,9 +38,14 @@ export default class extends React.Component {
   }
 
   handleKeyDown = event => {
+    console.log(event.key);
     switch (event.key) {
+      case 'a':
       case 'ArrowLeft':
         return this.nextImage(-1);
+      case 'Enter':
+      case ' ':
+      case 'd':
       case 'ArrowRight':
         return this.nextImage(1);
       default:
