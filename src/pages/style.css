@@ -14,7 +14,7 @@ body {
   justify-content: center;
   height: 100vh;
   padding: 2em;
-  pointer: cursor;
+  cursor: pointer;
 }
 
 img {

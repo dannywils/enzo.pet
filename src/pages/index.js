@@ -14,16 +14,52 @@ export default class extends React.Component {
       let image = new Image();
       image.src = node.childImageSharp.fluid.src;
     });
+
+    document.addEventListener('keydown', this.handleKeyDown, true);
   }
 
-  showNextImage = () => {
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyDown, true);
+  }
+
+  handleKeyDown = event => {
+    switch (event.key) {
+      case 'ArrowLeft':
+        return this.previousImage();
+      case 'ArrowRight':
+        return this.nextImage();
+      default:
+        return;
+    }
+  };
+
+  bark = () => {
     const audio = new Audio('/bark.wav');
     audio.play();
+  };
+
+  previousImage = () => {
+    this.bark();
 
     this.setState(prevState => {
-      return {
-        image: (prevState.image + 1) % this.props.data.allFile.edges.length
-      };
+      const previous = prevState.image - 1;
+
+      const image =
+        previous < 0 ? this.props.data.allFile.edges.length - 1 : previous;
+
+      return { image };
+    });
+  };
+
+  nextImage = () => {
+    this.bark();
+
+    this.setState(prevState => {
+      const next = prevState.image + 1;
+
+      const image = next > this.props.data.allFile.edges.length - 1 ? 0 : next;
+
+      return { image };
     });
   };
 
@@ -31,7 +67,7 @@ export default class extends React.Component {
     const { edges } = this.props.data.allFile;
 
     return (
-      <div className="wrapper" onClick={this.showNextImage}>
+      <div className="wrapper" onClick={this.nextImage}>
         <img
           src={edges[this.state.image].node.childImageSharp.fluid.src}
           alt="Enzo!"
