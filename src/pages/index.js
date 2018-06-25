@@ -13,7 +13,8 @@ export default class extends React.Component {
   };
 
   componentDidMount() {
-    this.audio = new Audio('/bark.mp3');
+    this.audio = [1, 2, 3, 4, 5].map(number => new Audio(`/bark${number}.mp3`));
+    this.barks = [...this.audio];
 
     // preload images
     this.props.data.allFile.edges.forEach((edge, i) => {
@@ -48,8 +49,13 @@ export default class extends React.Component {
   };
 
   bark = () => {
+    if (!this.barks.length) {
+      this.barks = [...this.audio];
+    }
+
     this.setState(prevState => ({ barks: prevState.barks + 1 }));
-    this.audio.cloneNode().play();
+    const bark = this.barks.splice(Math.floor(Math.random() * this.barks.length), 1);
+    bark[0].cloneNode().play();
   };
 
   nextImage = (delta = 1) => {
