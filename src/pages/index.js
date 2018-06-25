@@ -18,7 +18,7 @@ export default class extends React.Component {
     // preload images
     this.props.data.allFile.edges.forEach((edge, i) => {
       let image = new Image();
-      image.src = edge.node.childImageSharp.fluid.srcWebp;
+      image.src = edge.node.childImageSharp.fluid.src;
 
       if (i === 0) {
         image.onload = () => {
@@ -108,7 +108,7 @@ export default class extends React.Component {
           )}
         </Helmet>
         <div className="background" style={{ backgroundImage: `url(${image.base64})` }} />
-        <img src={image.srcWebp} alt="Enzo!" style={{ opacity: loaded ? 1 : 0 }} />
+        <img src={image.src} alt="Enzo!" style={{ opacity: loaded ? 1 : 0 }} />
       </div>
     );
   }
@@ -122,7 +122,7 @@ export const PageQuery = graphql`
           childImageSharp {
             fluid(maxWidth: 600) {
               base64
-              srcWebp
+              src
             }
           }
         }
