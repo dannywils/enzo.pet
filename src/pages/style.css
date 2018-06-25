@@ -6,6 +6,7 @@
 
 body {
   background: #00416a;
+  user-select: none;
 }
 
 .wrapper {
