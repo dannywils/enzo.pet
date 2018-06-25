@@ -9,7 +9,13 @@ export default class extends React.Component {
     image: 0
   };
 
+  componentDidMount() {
+    this.audio = new Audio('/bark.wav');
+  }
+
   showNextImage = () => {
+    this.audio.play();
+
     this.setState(prevState => {
       return {
         image: (prevState.image + 1) % this.props.data.allFile.edges.length
@@ -19,10 +25,11 @@ export default class extends React.Component {
 
   render() {
     const { edges } = this.props.data.allFile;
+    console.log(edges);
     return (
       <div className="wrapper" onClick={this.showNextImage}>
         <GatsbyImage
-          fluid={edges[this.state.image].node.childImageSharp.fluid}
+          fixed={edges[this.state.image].node.childImageSharp.fixed}
         />
       </div>
     );
@@ -35,8 +42,8 @@ export const PageQuery = graphql`
       edges {
         node {
           childImageSharp {
-            fluid {
-              ...GatsbyImageSharpFluid_withWebp
+            fixed(width: 600, height: 600) {
+              ...GatsbyImageSharpFixed_withWebp
             }
           }
         }

@@ -16,8 +16,6 @@ body {
 }
 
 .gatsby-image-outer-wrapper {
-  width: 100%;
-  max-width: 700px;
   border: 10px solid #fff;
   border-radius: 4px;
 }
