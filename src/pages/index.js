@@ -9,6 +9,8 @@ export default class extends React.Component {
   };
 
   componentDidMount() {
+    this.audio = new Audio('/bark.wav');
+
     // preload images
     this.props.data.allFile.edges.forEach(({ node }) => {
       let image = new Image();
@@ -34,8 +36,7 @@ export default class extends React.Component {
   };
 
   bark = () => {
-    const audio = new Audio('/bark.wav');
-    audio.play();
+    this.audio.cloneNode().play();
   };
 
   previousImage = () => {
