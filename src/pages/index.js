@@ -6,8 +6,9 @@ import './style.css';
 
 export default class extends React.Component {
   state = {
-    image: 0,
-    barks: 0,
+    imageIndex: 0,
+    image: this.props.data.allFile.edges[0].node.childImageSharp.fluid,
+    barks: -1,
     loaded: false
   };
 
@@ -15,7 +16,7 @@ export default class extends React.Component {
     this.audio = new Audio('/bark.mp3');
 
     // preload images
-    this.getImages().forEach((edge, i) => {
+    this.props.data.allFile.edges.forEach((edge, i) => {
       let image = new Image();
       image.src = edge.node.childImageSharp.fluid.srcWebp;
 
@@ -25,6 +26,8 @@ export default class extends React.Component {
         };
       }
     });
+
+    this.getFavicon();
 
     document.addEventListener('keydown', this.handleKeyDown, true);
   }
@@ -36,9 +39,9 @@ export default class extends React.Component {
   handleKeyDown = event => {
     switch (event.key) {
       case 'ArrowLeft':
-        return this.previousImage();
+        return this.nextImage(-1);
       case 'ArrowRight':
-        return this.nextImage();
+        return this.nextImage(1);
       default:
         return;
     }
@@ -49,52 +52,63 @@ export default class extends React.Component {
     this.audio.cloneNode().play();
   };
 
-  getImages = () => this.props.data.allFile.edges;
-
-  previousImage = () => {
+  nextImage = (delta = 1) => {
     this.bark();
 
     this.setState(prevState => {
-      const prev = prevState.image - 1;
-      const image = prev < 0 ? this.getImages().length - 1 : prev;
-      return { image };
+      const next = prevState.imageIndex + delta;
+      const lastImage = this.props.data.allFile.edges.length - 1;
+      let imageIndex;
+
+      if (delta > 0) {
+        imageIndex = next > lastImage ? 0 : next;
+      } else {
+        imageIndex = next < 0 ? lastImage : next;
+      }
+
+      return {
+        imageIndex,
+        image: this.props.data.allFile.edges[imageIndex].node.childImageSharp.fluid
+      };
     });
+
+    this.getFavicon();
   };
 
-  nextImage = () => {
-    this.bark();
+  getFavicon = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    const ctx = canvas.getContext('2d');
 
-    this.setState(prevState => {
-      const next = prevState.image + 1;
-      const image = next > this.getImages().length - 1 ? 0 : next;
-      return { image };
-    });
+    const image = new Image();
+
+    image.onload = () => {
+      ctx.drawImage(image, 0, 0);
+      const favicon = canvas.toDataURL('image/x-icon');
+      this.setState({ favicon });
+    };
+
+    image.src = this.state.image.base64;
   };
 
   render() {
-    const { loaded, barks } = this.state;
-    const image = this.getImages()[this.state.image].node.childImageSharp.fluid;
+    const { loaded, barks, image, favicon } = this.state;
 
     return (
-      <div className="wrapper" onClick={this.nextImage}>
-        {barks > 0 && (
-          <Helmet>
+      <div className="wrapper" onClick={() => this.nextImage()}>
+        <Helmet>
+          {favicon && <link rel="shortcut icon" type="image/x-icon" href={favicon} />}
+          {barks >= 0 && (
             <title>
               {Array.from({ length: (barks % 3) + 1 }, (_, i) => i)
                 .map(num => 'bark')
                 .join(' ')}
             </title>
-          </Helmet>
-        )}
-        <div
-          className="background"
-          style={{ backgroundImage: `url(${image.base64})` }}
-        />
-        <img
-          src={image.srcWebp}
-          alt="Enzo!"
-          style={{ opacity: loaded ? 1 : 0 }}
-        />
+          )}
+        </Helmet>
+        <div className="background" style={{ backgroundImage: `url(${image.base64})` }} />
+        <img src={image.srcWebp} alt="Enzo!" style={{ opacity: loaded ? 1 : 0 }} />
       </div>
     );
   }
