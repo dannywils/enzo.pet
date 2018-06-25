@@ -1,0 +1,23 @@
+html {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #00416a;
+  overflow: hidden;
+}
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.gatsby-image-outer-wrapper {
+  width: 100%;
+  max-width: 700px;
+  border: 10px solid #fff;
+  border-radius: 4px;
+}
