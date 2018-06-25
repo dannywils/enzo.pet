@@ -1,6 +1,5 @@
 import React from 'react';
 import { graphql } from 'gatsby';
-import GatsbyImage from 'gatsby-image';
 
 import './style.css';
 
@@ -28,8 +27,9 @@ export default class extends React.Component {
 
     return (
       <div className="wrapper" onClick={this.showNextImage}>
-        <GatsbyImage
-          fixed={edges[this.state.image].node.childImageSharp.fixed}
+        <img
+          src={edges[this.state.image].node.childImageSharp.fluid.src}
+          alt="Enzo!"
         />
       </div>
     );
@@ -42,8 +42,8 @@ export const PageQuery = graphql`
       edges {
         node {
           childImageSharp {
-            fixed(width: 600, height: 600) {
-              ...GatsbyImageSharpFixed_withWebp
+            fluid(maxWidth: 600) {
+              ...GatsbyImageSharpFluid_withWebp
             }
           }
         }
