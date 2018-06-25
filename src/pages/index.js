@@ -78,8 +78,6 @@ export default class extends React.Component {
         />
         <img
           src={image.srcWebp}
-          srcSet={image.srcSet}
-          sizes={image.sizes}
           alt="Enzo!"
           style={{ opacity: this.state.loaded ? 1 : 0 }}
         />
