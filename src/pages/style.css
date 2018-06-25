@@ -26,8 +26,35 @@ body {
   position: fixed;
   top: -5vh;
   left: -5vw;
-  height: 110vh;
-  width: 110vw;
+  height: 120vh;
+  width: 120vw;
+  animation-name: bg-animation;
+  animation-timing-function: ease-in-out;
+  animation-duration: 20s;
+  animation-iteration-count: infinite;
+}
+
+@keyframes bg-animation {
+  0% {
+    top: -10vh;
+    left: -10vw;
+  }
+  25% {
+    top: -10vh;
+    left: -5vw;
+  }
+  50% {
+    top: -5vh;
+    left: -5vw;
+  }
+  75% {
+    top: -5vh;
+    left: -10vw;
+  }
+  100% {
+    top: -10vh;
+    left: -10vw;
+  }
 }
 
 img {
