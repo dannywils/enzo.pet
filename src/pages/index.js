@@ -5,16 +5,23 @@ import './style.css';
 
 export default class extends React.Component {
   state = {
-    image: 0
+    image: 0,
+    loaded: false
   };
 
   componentDidMount() {
     this.audio = new Audio('/bark.mp3');
 
     // preload images
-    this.props.data.allFile.edges.forEach(({ node }) => {
+    this.props.data.allFile.edges.forEach((edge, i) => {
       let image = new Image();
-      image.src = node.childImageSharp.fluid.src;
+      image.src = edge.node.childImageSharp.fluid.srcWebp;
+
+      if (i === 0) {
+        image.onload = () => {
+          this.setState({ loaded: true });
+        };
+      }
     });
 
     document.addEventListener('keydown', this.handleKeyDown, true);
@@ -43,11 +50,8 @@ export default class extends React.Component {
     this.bark();
 
     this.setState(prevState => {
-      const previous = prevState.image - 1;
-
-      const image =
-        previous < 0 ? this.props.data.allFile.edges.length - 1 : previous;
-
+      const prev = prevState.image - 1;
+      const image = prev < 0 ? this.props.data.allFile.edges.length - 1 : prev;
       return { image };
     });
   };
@@ -57,21 +61,27 @@ export default class extends React.Component {
 
     this.setState(prevState => {
       const next = prevState.image + 1;
-
       const image = next > this.props.data.allFile.edges.length - 1 ? 0 : next;
-
       return { image };
     });
   };
 
   render() {
-    const { edges } = this.props.data.allFile;
+    const image = this.props.data.allFile.edges[this.state.image].node
+      .childImageSharp.fluid;
 
     return (
       <div className="wrapper" onClick={this.nextImage}>
+        <div
+          className="background"
+          style={{ backgroundImage: `url(${image.base64})` }}
+        />
         <img
-          src={edges[this.state.image].node.childImageSharp.fluid.src}
+          src={image.srcWebp}
+          srcSet={image.srcSet}
+          sizes={image.sizes}
           alt="Enzo!"
+          style={{ opacity: this.state.loaded ? 1 : 0 }}
         />
       </div>
     );
