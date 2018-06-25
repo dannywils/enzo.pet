@@ -9,11 +9,16 @@ export default class extends React.Component {
   };
 
   componentDidMount() {
-    this.audio = new Audio('/bark.wav');
+    // preload images
+    this.props.data.allFile.edges.forEach(({ node }) => {
+      let image = new Image();
+      image.src = node.childImageSharp.fluid.src;
+    });
   }
 
   showNextImage = () => {
-    this.audio.play();
+    const audio = new Audio('/bark.wav');
+    audio.play();
 
     this.setState(prevState => {
       return {
