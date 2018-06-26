@@ -1,6 +1,7 @@
 import React from 'react';
 import { graphql } from 'gatsby';
 import Helmet from 'react-helmet';
+import throttle from 'lodash/throttle';
 
 import './style.css';
 
@@ -15,6 +16,7 @@ export default class extends React.Component {
   componentDidMount() {
     this.audio = [1, 2, 3, 4, 5].map(number => new Audio(`/bark${number}.mp3`));
     this.barks = [...this.audio];
+    setTimeout(this.bark, 1000);
 
     // preload images
     this.props.data.allFile.edges.forEach((edge, i) => {
@@ -63,8 +65,10 @@ export default class extends React.Component {
     bark[0].cloneNode().play();
   };
 
+  throttleBark = throttle(this.bark, 350);
+
   nextImage = (delta = 1) => {
-    this.bark();
+    this.throttleBark();
 
     this.setState(prevState => {
       const next = prevState.imageIndex + delta;
