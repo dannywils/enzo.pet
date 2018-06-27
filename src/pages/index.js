@@ -14,7 +14,9 @@ export default class extends React.Component {
 
   componentDidMount() {
     // create the audio sources for each bark file
-    this.audio = this.props.data.audio.edges.map(edge => new Audio(edge.node.publicURL));
+    this.audio = this.props.data.audio.edges.map(
+      edge => new Audio(edge.node.publicURL)
+    );
 
     // create a clone of the array that we will splice from to ensure unique barks
     this.barks = [...this.audio];
@@ -25,7 +27,7 @@ export default class extends React.Component {
     // preload images
     this.props.data.images.edges.forEach((edge, i) => {
       let image = new Image();
-      image.src = edge.node.childImageSharp.fluid.src;
+      image.src = edge.node.childImageSharp.resize.src;
 
       // once the first images is loaded set a flag to fade it in
       if (i === 0) {
@@ -64,7 +66,10 @@ export default class extends React.Component {
     }
 
     // pull a random bark from the remaining barks
-    const bark = this.barks.splice(Math.floor(Math.random() * this.barks.length), 1);
+    const bark = this.barks.splice(
+      Math.floor(Math.random() * this.barks.length),
+      1
+    );
 
     // clone the bark so multiple barks can play simultaneously
     bark[0].cloneNode().play();
@@ -102,7 +107,8 @@ export default class extends React.Component {
   };
 
   currentImage = () =>
-    this.props.data.images.edges[this.state.imageIndex].node.childImageSharp.fluid;
+    this.props.data.images.edges[this.state.imageIndex].node.childImageSharp
+      .resize;
 
   render() {
     const { firstImageLoaded, barkCount } = this.state;
@@ -120,8 +126,15 @@ export default class extends React.Component {
             </title>
           </Helmet>
         )}
-        <div className="background" style={{ backgroundImage: `url(${image.base64})` }} />
-        <img src={image.src} alt="Enzo!" style={{ opacity: firstImageLoaded ? 1 : 0 }} />
+        <div
+          className="background"
+          style={{ backgroundImage: `url(${image.src})` }}
+        />
+        <img
+          src={image.src}
+          alt="Enzo!"
+          style={{ opacity: firstImageLoaded ? 1 : 0 }}
+        />
       </div>
     );
   }
@@ -133,8 +146,7 @@ export const PageQuery = graphql`
       edges {
         node {
           childImageSharp {
-            fluid(maxWidth: 600) {
-              base64
+            resize(width: 600, quality: 75) {
               src
             }
           }
