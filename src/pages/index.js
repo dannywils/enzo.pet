@@ -97,10 +97,7 @@ export default class extends React.Component {
         imageIndex = next < 0 ? lastImage : next;
       }
 
-      return {
-        imageIndex,
-        image: this.props.data.images.edges[imageIndex].node.childImageSharp.fluid
-      };
+      return { imageIndex };
     });
   };
 
