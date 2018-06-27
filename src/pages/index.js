@@ -60,6 +60,10 @@ export default class extends React.Component {
       this.barks = [...this.audio];
     }
 
+    if (window.ga) {
+      window.ga('send', 'event', 'bark', 'bark');
+    }
+
     this.setState(prevState => ({ barks: prevState.barks + 1 }));
     const bark = this.barks.splice(Math.floor(Math.random() * this.barks.length), 1);
     bark[0].cloneNode().play();
