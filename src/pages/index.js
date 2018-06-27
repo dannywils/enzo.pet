@@ -1,36 +1,39 @@
 import React from 'react';
 import { graphql } from 'gatsby';
 import Helmet from 'react-helmet';
-import throttle from 'lodash/throttle';
+import muzzle from 'lodash/throttle';
 
 import './style.css';
 
 export default class extends React.Component {
   state = {
     imageIndex: 0,
-    image: this.props.data.allFile.edges[0].node.childImageSharp.fluid,
-    barks: -1,
-    loaded: false
+    barkCount: -1,
+    firstImageLoaded: false
   };
 
   componentDidMount() {
-    this.audio = [1, 2, 3, 4, 5].map(number => new Audio(`/bark${number}.mp3`));
+    // create the audio sources for each bark file
+    this.audio = this.props.data.audio.edges.map(edge => new Audio(edge.node.relativePath));
+
+    // create a clone of the array that we will splice from to ensure unique barks
     this.barks = [...this.audio];
+
+    // bark after the page has been loaded for 1 second
     setTimeout(this.bark, 1000);
 
     // preload images
-    this.props.data.allFile.edges.forEach((edge, i) => {
+    this.props.data.images.edges.forEach((edge, i) => {
       let image = new Image();
       image.src = edge.node.childImageSharp.fluid.src;
 
+      // once the first images is loaded set a flag to fade it in
       if (i === 0) {
         image.onload = () => {
-          this.setState({ loaded: true });
+          this.setState({ firstImageLoaded: true });
         };
       }
     });
-
-    this.getFavicon();
 
     document.addEventListener('keydown', this.handleKeyDown, true);
   }
@@ -40,7 +43,6 @@ export default class extends React.Component {
   }
 
   handleKeyDown = event => {
-    console.log(event.key);
     switch (event.key) {
       case 'a':
       case 'ArrowLeft':
@@ -56,27 +58,37 @@ export default class extends React.Component {
   };
 
   bark = () => {
-    if (!this.barks.length) {
-      this.barks = [...this.audio];
-    }
-
+    // log the bark event to google analytics
     if (window.ga) {
       window.ga('send', 'event', 'bark', 'bark');
     }
 
-    this.setState(prevState => ({ barks: prevState.barks + 1 }));
+    // pull a random bark from the remaining barks
     const bark = this.barks.splice(Math.floor(Math.random() * this.barks.length), 1);
+
+    // clone the bark so multiple barks can play simultaneously
     bark[0].cloneNode().play();
+
+    // increment the bark count
+    this.setState(prevState => ({ barkCount: prevState.barkCount + 1 }));
+
+    // if we run out of barks, refresh the array
+    // from the saved set of audio objects
+    if (!this.barks.length) {
+      this.barks = [...this.audio];
+    }
   };
 
-  throttleBark = throttle(this.bark, 350);
+  // muzzle (throttle) the barking in case the user
+  // holds the arrow keys or clicks fast
+  muzzledBark = muzzle(this.bark, 350);
 
   nextImage = (delta = 1) => {
-    this.throttleBark();
+    this.muzzledBark();
 
     this.setState(prevState => {
       const next = prevState.imageIndex + delta;
-      const lastImage = this.props.data.allFile.edges.length - 1;
+      const lastImage = this.props.data.images.edges.length - 1;
       let imageIndex;
 
       if (delta > 0) {
@@ -87,51 +99,32 @@ export default class extends React.Component {
 
       return {
         imageIndex,
-        image: this.props.data.allFile.edges[imageIndex].node.childImageSharp.fluid
+        image: this.props.data.images.edges[imageIndex].node.childImageSharp.fluid
       };
     });
-
-    this.getFavicon();
   };
 
-  getFavicon = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 16;
-    canvas.height = 16;
-    const ctx = canvas.getContext('2d');
-
-    const image = new Image();
-
-    image.onload = () => {
-      ctx.drawImage(image, 0, 0);
-      const favicon = canvas.toDataURL('image/x-icon');
-      this.setState({ favicon });
-    };
-
-    image.src = this.state.image.base64;
-  };
+  currentImage = () =>
+    this.props.data.images.edges[this.state.imageIndex].node.childImageSharp.fluid;
 
   render() {
-    const { loaded, barks, image, favicon } = this.state;
+    const { firstImageLoaded, barkCount } = this.state;
+    const image = this.currentImage();
+    const titleBarks = (barkCount % 3) + 1;
 
     return (
       <div className="wrapper" onClick={() => this.nextImage()}>
-        <Helmet>
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
-          />
-          {favicon && <link rel="shortcut icon" type="image/x-icon" href={favicon} />}
-          {barks >= 0 && (
+        {barkCount >= 0 && (
+          <Helmet>
             <title>
-              {Array.from({ length: (barks % 3) + 1 }, (_, i) => i)
-                .map(num => 'bark')
+              {Array(titleBarks)
+                .fill('bark')
                 .join(' ')}
             </title>
-          )}
-        </Helmet>
+          </Helmet>
+        )}
         <div className="background" style={{ backgroundImage: `url(${image.base64})` }} />
-        <img src={image.src} alt="Enzo!" style={{ opacity: loaded ? 1 : 0 }} />
+        <img src={image.src} alt="Enzo!" style={{ opacity: firstImageLoaded ? 1 : 0 }} />
       </div>
     );
   }
@@ -139,7 +132,7 @@ export default class extends React.Component {
 
 export const PageQuery = graphql`
   query IndexQuery {
-    allFile {
+    images: allFile(filter: { sourceInstanceName: { eq: "images" } }) {
       edges {
         node {
           childImageSharp {
@@ -148,6 +141,13 @@ export const PageQuery = graphql`
               src
             }
           }
+        }
+      }
+    }
+    audio: allFile(filter: { sourceInstanceName: { eq: "audio" } }) {
+      edges {
+        node {
+          relativePath
         }
       }
     }
