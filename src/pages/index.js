@@ -14,7 +14,7 @@ export default class extends React.Component {
 
   componentDidMount() {
     // create the audio sources for each bark file
-    this.audio = this.props.data.audio.edges.map(edge => new Audio(edge.node.relativePath));
+    this.audio = this.props.data.audio.edges.map(edge => new Audio(edge.node.publicURL));
 
     // create a clone of the array that we will splice from to ensure unique barks
     this.barks = [...this.audio];
@@ -144,7 +144,7 @@ export const PageQuery = graphql`
     audio: allFile(filter: { sourceInstanceName: { eq: "audio" } }) {
       edges {
         node {
-          relativePath
+          publicURL
         }
       }
     }
