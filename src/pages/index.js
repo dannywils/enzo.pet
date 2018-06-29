@@ -6,6 +6,10 @@ import muzzle from 'lodash/throttle';
 import './style.css';
 
 export default class extends React.Component {
+  static defaultProps = {
+    barkDelay: 200
+  };
+
   state = {
     imageIndex: 0,
     barkCount: -1,
@@ -44,21 +48,6 @@ export default class extends React.Component {
     document.removeEventListener('keydown', this.handleKeyDown, true);
   }
 
-  handleKeyDown = event => {
-    switch (event.key) {
-      case 'a':
-      case 'ArrowLeft':
-        return this.nextImage(-1);
-      case 'Enter':
-      case ' ':
-      case 'd':
-      case 'ArrowRight':
-        return this.nextImage(1);
-      default:
-        return;
-    }
-  };
-
   bark = () => {
     // log the bark event to google analytics
     if (window.ga) {
@@ -84,12 +73,8 @@ export default class extends React.Component {
     }
   };
 
-  // muzzle (throttle) the barking in case the user
-  // holds the arrow keys or clicks fast
-  muzzledBark = muzzle(this.bark, 350);
-
-  nextImage = (delta = 1) => {
-    this.muzzledBark();
+  changeImage = (delta = 1) => {
+    this.bark();
 
     this.setState(prevState => {
       const next = prevState.imageIndex + delta;
@@ -106,26 +91,73 @@ export default class extends React.Component {
     });
   };
 
+  throttledChangeImage = muzzle(this.changeImage, this.props.barkDelay);
+
+  handleKeyDown = event => {
+    switch (event.key) {
+      case 'a':
+      case 'ArrowLeft':
+        return this.throttledChangeImage(-1);
+      case 'Enter':
+      case ' ':
+      case 'd':
+      case 'ArrowRight':
+        return this.throttledChangeImage();
+      default:
+        return;
+    }
+  };
+
   currentImage = () =>
     this.props.data.images.edges[this.state.imageIndex].node.childImageSharp
       .resize;
 
-  render() {
-    const { firstImageLoaded, barkCount } = this.state;
-    const image = this.currentImage();
+  renderHead = () => {
+    const { barkCount } = this.state;
     const titleBarks = (barkCount % 3) + 1;
 
+    const {
+      site: { siteMetadata }
+    } = this.props.data;
+
     return (
-      <div className="wrapper" onClick={() => this.nextImage()}>
-        {barkCount >= 0 && (
-          <Helmet>
-            <title>
-              {Array(titleBarks)
-                .fill('bark')
-                .join(' ')}
-            </title>
-          </Helmet>
+      <Helmet>
+        {barkCount === -1 ? (
+          <title>{siteMetadata.title}</title>
+        ) : (
+          <title>
+            {Array(titleBarks)
+              .fill('bark')
+              .join(' ')}
+          </title>
         )}
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link key="icon" rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+        />
+        <meta name="description" content={siteMetadata.description} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content={siteMetadata.twitter} />
+        <meta name="twitter:creator" content={siteMetadata.twitter} />
+        <meta property="og:url" content={siteMetadata.url} />
+        <meta property="og:title" content={siteMetadata.title} />
+        <meta property="og:description" content={siteMetadata.description} />
+        <meta
+          property="og:image"
+          content={`${siteMetadata.url}${this.currentImage().src}`}
+        />
+      </Helmet>
+    );
+  };
+
+  render() {
+    const image = this.currentImage();
+
+    return (
+      <div className="wrapper" onClick={() => this.throttledChangeImage()}>
+        {this.renderHead()}
         <div
           className="background"
           style={{ backgroundImage: `url(${image.src})` }}
@@ -133,7 +165,7 @@ export default class extends React.Component {
         <img
           src={image.src}
           alt="Enzo!"
-          style={{ opacity: firstImageLoaded ? 1 : 0 }}
+          style={{ opacity: this.state.firstImageLoaded ? 1 : 0 }}
         />
       </div>
     );
@@ -142,6 +174,14 @@ export default class extends React.Component {
 
 export const PageQuery = graphql`
   query IndexQuery {
+    site {
+      siteMetadata {
+        url
+        title
+        description
+        twitter
+      }
+    }
     images: allFile(filter: { sourceInstanceName: { eq: "images" } }) {
       edges {
         node {

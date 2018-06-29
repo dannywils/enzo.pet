@@ -1,7 +1,14 @@
 module.exports = {
+  siteMetadata: {
+    url: `https://enzo.pet`,
+    title: `He's a good boy`,
+    description: `The best boy.`,
+    twitter: `@dannywils`
+  },
   plugins: [
     'gatsby-transformer-sharp',
     'gatsby-plugin-sharp',
+    'gatsby-plugin-react-helmet',
     {
       resolve: `gatsby-plugin-netlify`,
       options: {
